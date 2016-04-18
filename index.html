@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8">
+
+		<title>Git ProTips • Christophe Porteneuve @ Devoxx France 2016</title>
+
+		<meta name="description" content="Un Hands-On-Lab (HoL) à Devoxx France 2016">
+		<meta name="author" content="Christophe Porteneuve">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/animate.min.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/devoxxfr1.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/tomorrow.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-43650325-10', 'auto');
+      ga('require', 'linkid');
+      ga('send', 'pageview');
+    </script>
+	</head>
+
+	<body id="prioFix">
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section data-state="intro" data-background="images/background_1280_720_HD.jpg">
+					<h1>Devoxx France 2016<br />sample presentation</h1>
+					<p>Nicolas Martignole <a href="http://twitter.com/nmartignole">@nmartignole</a><br />
+					Zouheir Cadi <a href="http://twitter.com/zouheircadi">@zouheircadi</a><br />
+					Antonio Goncalves <a href="http://twitter.com/agoncal">@agoncal</a></p>
+				</section>
+				<section>
+					<h1>Modern<br/>async JS</h1>
+					<p>
+						<small>A talk by <a href="http://tddsworld.com/en/">Christophe Porteneuve</a> at <a href="http://2015.dotjs.io">dotJS 2015</a></small>
+					</p>
+				</section>
+
+				<section id="whoami">
+					<h2>whoami</h2>
+
+					<pre><code data-trim class="javascript">
+var christophe = {
+  age:        38.09034907597536,
+  family:     { wife: 'Élodie', son: 'Maxence' },
+  city:       'Paris, FR',
+  company:    'Delicious Insights',
+  trainings:  ['360° JS', 'Node.js', '360° Git'],
+  webSince:   1995,
+  claimsToFame: [
+    'Prototype.js',
+    'Ruby On Rails',
+    'Bien Développer pour le Web 2.0',
+    'Prototype and Script.aculo.us',
+    'Paris Web'
+  ]
+};
+          </code></pre>
+				</section>
+
+        <section>
+					<section id="callback-hell">
+            <h3>Your daily</h3>
+						<h1>Callback Hell</h1>
+            <h3>reminder</h3>
+            <aside class="notes">17:30 -> 15:00</aside>
+					</section>
+
+          <section id="cbhell-simple-example">
+            <h2>A simple example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function readPost(req, res) {
+  Post.findById(req.params.id<u>, function(err, post)</u> {
+    if (err) {
+      return handleError(err);
+    }
+
+    post.findRecentComments(<u>function(err, comments) {</u>
+      if (err) {
+        return handleError(err);
+      }
+
+      res.render('posts/show', { post: post, comments: comments, title: post.title });
+    });
+  });
+}
+            </code></pre>
+
+            <aside class="notes">17:29 -> 17:10</aside>
+          </section>
+
+          <section id="cbhell-involved-example">
+            <h2>A more involved example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function normalizeSKUs(skus, <u>cb</u>) {
+  var <u>normalizations = {}, count, xhrs = []</u>;
+
+  function handleError(err) {
+    _(xhrs).invoke('abort');
+    <u>cb(err);</u>
+  }
+
+  function handleSKU(payload) {
+    normalizations[payload.from] = payload.to;
+    if (<u>++count &lt; xhrs.length</u>)
+      return;
+
+    <u>cb(null, normalizations);</u>
+  }
+
+  function normalizeFromServer(sku) {
+    xhrs.push($.ajax({
+      url:       '/api/v1/skus/normalize',
+      data:      { sku: sku },
+      <u>onSuccess: handleSKU</u>,
+      <u>onError:   handleError</u>
+    }));
+  }
+}
+            </code></pre>
+
+            <aside class="notes">17:10 -> 16:30</aside>
+          </section>
+
+          <section id="cbhell-whats-wrong">
+            <h2>What’s wrong?</h2>
+
+            <h4 class="breathe">Code doesn’t flow well</h4>
+            <p class="fragment">
+              Mind / Code mapping is terrible.<br/>
+              <small>(mostly because no returned value / entity)</small>
+            </p>
+            <p class="fragment">Error management is a friggin’ mess.</p>
+
+            <h4 class="fragment">Untrustworthy</h4>
+            <p class="fragment">Will it even <strong>run</strong>?</p>
+            <p class="fragment">Will it run <strong>either</strong> error or success callbacks, not <strong>both</strong>?</p>
+            <p class="fragment">Will it run only <strong>once</strong>?</p>
+
+            <h4 class="fragment">No composability</h4>
+
+            <aside class="notes">
+              <p>16:30 -> 15:00</p>
+              <ol>
+                <li>16:30 -> 16:15 Flow</li>
+                <li>16:15 -> 16:05 Will it even run?</li>
+                <li>16:05 -> 15:50 Will it run either/or?</li>
+                <li>15:50 -> 15:35 Will it run only once?</li>
+                <li>15:35 -> 15:20 Twitter embed</li>
+                <li>15:20 -> 15:00 No composability</li>
+              </ol>
+            </aside>
+          </section>
+				</section> <!-- #callback-hell -->
+
+        <section>
+          <section id="asyncjs">
+            <h3>Staying with callbacks</h3>
+            <h1>Async.js</h1>
+            <aside class="notes">15:00 -> 13:00</aside>
+          </section>
+
+          <section id="asyncjs-simple-example">
+            <h2>A simple example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+<u>async.waterfall</u>(<u>[</u>
+  Store.getDefaultBundleId,
+  Bundle.findById,
+  function(bundle<u>, cb</u>) { bundle.getSKUs(<u>cb</u>); }
+<u>]</u>, function(err, results) {
+  if (err) {
+    return handleError(res, err);
+  }
+
+  res.render('bundle/skus', { bundle: bundle });
+});
+            </code></pre>
+
+            <aside class="notes">14:59 -> 14:30</aside>
+          </section>
+
+          <section id="asyncjs-involved-example">
+            <h2>A more involved example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+var computationDone = false;
+<u>async.whilst</u>(
+  function loopCheck() { return !computationDone; },
+  function loopBody(<u>cb</u>) {
+    $.getJSON('/api/v1/jobs/status/' + job.id), function(status) {
+      computationDone = 'done' === status;
+      <u>cb();</u>
+    }
+  },
+  function loopDone() {
+    <u>async.map</u>(
+      job.imageIds,
+      function mappingRequester(imageId, <u>cb</u>) {
+        $.getJSON('/api/v1/images/' + imageId, <u>cb</u>);
+      },
+      function mapDone(err, results) {
+        if (err) {
+          renderError(err);
+        } else {
+          renderCloudImages(results);
+        }
+      }
+    ); // map
+  }
+); // whilst
+            </code></pre>
+
+            <aside class="notes">14:30 -> 13:45</aside>
+          </section>
+
+          <section id="asyncjs-pros-and-solves">
+            <h2>Pros</h2>
+
+            <p>No <strong>extra concepts</strong></p>
+            <p class="fragment">No <strong>abstraction penalty</strong> (performance or code cruft)</p>
+            <p class="fragment"><strong>Wide</strong> range of use cases</p>
+            <p class="fragment"><strong>Well-tested</strong>, well-maintained (h/t @caolan)</p>
+
+            <h4 class="fragment">Solves…</h4>
+
+            <p class="fragment">…some of the <strong>code flow and composability issues</strong> we’ve seen.</p>
+            <p class="fragment">But not all.  And none of the other issues.</p>
+
+            <aside class="notes">
+              <p>13:45 -> 13:00</p>
+              <ol>
+                <li>13:45 -> 13:15 : Pro's</li>
+                <li>13:15 -> 13:00 : Solves</li>
+              </ol>
+            </aside>
+          </section>
+        </section> <!-- #async-js -->
+
+				<section>
+          <section id="promises">
+            <h1>Promises</h1>
+            <h3>are cool, I swear.</h3>
+            <aside class="notes">13:00 -> 10:00</aside>
+          </section>
+
+          <section id="promises-history">
+            <h2>Old-timers already</h2>
+
+            <p>Been there a long time, under various forms and names.</p>
+            <p>Came into JS in <strong>2007</strong> <a target="_blank" href="https://dojotoolkit.org/reference-guide/1.10/dojo/Deferred.html">through Dōjō</a>.</p>
+            <p class="fragment">Promises/A proposed in CommonJS in 2009 (Kris Zyp)</p>
+            <p class="fragment">Promises/A+ in <strong>2012</strong> (Brian Cavalier, Domenic Denicola et at.)</p>
+            <br/>
+            <p class="fragment">Recent web APIs use promises (e.g. <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">fetch</a>, <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker">ServiceWorker</a>…)</p>
+            <p class="fragment">Tons of libs (Q, rsvp, bluebird…), polyfills… Now <strong>ES6/2015 native</strong>.</p>
+
+            <aside class="notes">
+              <p>13:00 -> 12:15</p>
+              <ol>
+                <li>13:00 -> 12:40 History</li>
+                <li>12:40 -> 12:30 Recent web APIs</li>
+                <li>12:30 -> 12:15 Tons of libs</li>
+              </ol>
+            </aside>
+          </section>
+
+          <section id="promises-simple-example">
+            <h2>Basic examples</h2>
+
+            <p>XHR wrapping:</p>
+            <pre><code class="javascript" data-trim data-noescape>
+function get(url) {
+  return <u>new Promise(function(resolve, reject)</u> {
+    var req = new XMLHttpRequest();
+    req.open('GET', url);
+    req.onload = function() {
+      if (req.status === 200) {
+        <u>resolve</u>(req.response);
+      } else {
+        <u>reject(new Error(</u>req.statusText));
+      }
+    };
+    req.onerror = function() { <u>reject(new Error(</u>"Network error")); };
+    req.send();
+  });
+}
+            </code></pre>
+
+            <p>jQuery’s qXHR objects are <em>almost</em> promises:</p>
+            <pre><code class="javascript" data-trim data-noescape>
+$.getJSON('/api/v1/status').then(renderStatus, handleError);
+            </code></pre>
+
+            <aside class="notes">12:15 -> 11:45</aside>
+          </section>
+
+          <section id="promises-involved-example">
+            <h2>A more involved example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function getJSON(url) {
+  return get(url).then(<u>JSON.parse</u>); // Sync, throwing steps are cast!
+}
+
+getJSON('story.json').then(function(story) {
+  <u>return getJSON</u>(story.chapterUrls[0]); // Chain injection!
+}).then(function(chapter1) {
+  addHtmlToPage(chapter1.html);
+})<u>.catch</u>(function() { // Exception catching!
+  addTextToPage("Chapter couldn’t display.  FML.");
+}).then(hideSpinner);
+            </code></pre>
+            <aside class="notes">11:45 -> 11:00</aside>
+          </section>
+
+          <section id="promises-links" class="breathing">
+            <h2>A couple great resources</h2>
+
+            <p><a target="_blank" href="http://www.html5rocks.com/en/tutorials/es6/promises/">Awesome article</a> by Jake Archibald.  Really drives the point home.</p>
+            <p class="fragment"><a target="_blank" href="https://www.promisejs.org/">promisejs.org</a>, a comprehensive grounding by Forbes Lindesay.</p>
+            <p class="fragment"><a target="_blank" href="http://bevacqua.github.io/promisees/">Promisees</a>, an interactive playground by Nicolás Bevacqua.</p>
+            <aside class="notes">11:00 -> 10:50</aside>
+          </section>
+
+          <section id="promises-pros-and-cons">
+            <h2>Pro’s and Con’s</h2>
+
+            <h4 class="breathe">Awesome:</h4>
+            <p><strong>Trustworthy</strong>: only one callback, only once, guaranteed.  Plus, exceptions!</p>
+            <p class="fragment"><strong>Composable</strong>: chainable, with injection and casting.</p>
+            <div class="fragment">
+              <h4>Not so awesome:</h4>
+              <p>New <strong>abstractions</strong></p>
+            </div>
+            <p class="fragment">Slight performance penalty (improves, esp. with natives)</p>
+            <p class="fragment">Code flow remains <strong>non-intuitive</strong> / very different from sync code.</p>
+            <aside class="notes">
+              <p>10:50 -> 10:00</p>
+              <ol>
+                <li>10:50 -> 10:30 : pros</li>
+                <li>10:30 -> 10:00 : cons</li>
+              </ol>
+            </aside>
+          </section>
+        </section> <!-- #promises -->
+
+        <section>
+          <section id="generators">
+            <h1>Generators</h1>
+            <h3>Lazy little critters</h3>
+            <aside class="notes">10:00 -> 06:45</aside>
+          </section>
+
+          <section id="gens-laziness" class="breathing">
+            <h2>Sheer Laziness</h2>
+
+            <p>Generators let us do <strong>lazy eval</strong> in JS. Which is <strong>beyond awesome!</strong></p>
+            <p class="fragment">I CAN HAZ <strong>coroutines</strong>: ad hoc suspending of the current code path (incl. stack), to be resumed later.  At any points in our code.</p>
+            <p class="fragment">Builds upon a more general concept: <strong>iterators</strong> (and <strong>iterables</strong>)</p>
+            <aside class="notes">
+              <p>10:00 -> 09:00</p>
+              <ol>
+                <li>10:00 -> 09:30 Basically, JS lazy eval</li>
+                <li>09:30 -> 09:10 Coroutines</li>
+                <li>09:10 -> 09:00 Iterators</li>
+              </ol>
+            </aside>
+          </section>
+
+          <section id="gens-functions-and-yield">
+            <h2>Building blocks</h2>
+
+            <h4 class="breathe">Generative functions</h4>
+            <p>Calling them <strong>spawns</strong> a generator, which combines the properties of an iterator and an iterable.  Uses <code>function*</code> (note the star).</p>
+            <pre><code class="javascript" data-trim data-noescape>
+<u>function*</u> myGenFunction() { … }
+            </code></pre>
+
+            <div class="fragment">
+              <h4>I yield! I yield!</h4>
+
+              <p>Suspend current function until caller gives control back. <strong>Coroutines!</strong></p>
+
+              <pre><code class="javascript" data-trim data-noescape>
+  function* myGenFunction() {
+    // …
+    <u>yield</u> someValue;
+    // …
+  }
+              </code></pre>
+            </div>
+
+            <p class="fragment">A <strong>conversation</strong>: <code>yield</code> can <strong>return a value</strong> the caller sends back, and the generator API lets the caller control the callee (<code>returns</code>, <code>throws</code>).</p>
+
+            <aside class="notes">
+              <p>09:00 -> 08:05</p>
+              <ol>
+                <li>09:00 -> 08:40 Special functions</li>
+                <li>08:40 -> 08:05 yield + API</li>
+              </ol>
+            </aside>
+          </section>
+
+          <section id="gens-example">
+            <h2>Your run-of-the-mill example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+<u>function*</u> fibonacci(n) {
+  const infinite = !n &amp;&amp; n !== 0;
+  let current = 0;
+  let next = 1;
+
+  while (infinite || n--) {
+    <u>yield</u> current;
+    [current, next] = [next, current + next];
+  }
+}
+
+// Old-school:
+var fibGen = fibonacci();
+fibGen<u>.next().value</u> // => 0
+fibGen<u>.next().value</u> // => 1
+fibGen<u>.next().value</u> // => 1
+
+// Generators are iterables, so for…of work, as do spreads:
+let <u>[...first10]</u> = fibonacci(10);
+first10 // => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+            </code></pre>
+            <footer>(Credit: <a href="https://gist.github.com/jfairbank/8d36e4bde9c16dc0bac7">Jeremy Fairbank</a>)</footer>
+            <aside class="notes">08:05 -> 07:35</aside>
+          </section>
+
+          <section id="gens-composability">
+            <h2>Composability / Delegatability</h2>
+
+            <p>We can delegate to another generator / iterable by using <code>yield*</code>.</p>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function* getComposedGen() {
+  <u>yield*</u> fibonacci(3);
+  <u>yield*</u> [2, 3, 5];
+  <u>yield*</u> "8C";
+}
+
+[...getComposedGen()] // => [0, 1, 1, 2, 4, 5, "8", "C"]
+            </code></pre>
+            <aside class="notes">07:35 -> 07:05</aside>
+          </section>
+
+          <section id="gens-sync-but">
+            <h2>But… async?</h2>
+
+            <p>Coroutines ≠ Async</p>
+            <p>The code remains <strong>synchronous</strong>, even if we jump around stack frames.</p>
+            <br>
+            <p class="fragment">…So, generators don’t really solve async issues, do they?</p>
+            <p class="fragment"><strong>Not by themselves</strong>, that’s true. <strong>But…</strong></p>
+            <aside class="notes">07:05 -> 06:45</aside>
+          </section>
+				</section> <!-- #generators -->
+
+        <section>
+          <section id="promises-with-generators">
+            <h1>Promises + Generators</h1>
+            <h3>Or: proof that you grokked it all</h3>
+            <aside class="notes">06:45 -> 04:30</aside>
+          </section>
+
+          <section id="promises-with-gens-ground-work" class="breathing">
+            <h2>Underpinnings</h2>
+
+            <p>Forbes famously called this “<a target="_blank" href="http://2013.jsconf.eu/speakers/forbes-lindesay-promises-and-generators-control-flow-utopia.html">Control-Flow Utopia</a>” at JSConf.EU 2013.</p>
+
+            <p class="fragment">The generator API is a <strong>conversation</strong>, remember?  The caller can ask the callee to not just proceed (with an optional <strong>value sent back into it</strong>), but <strong>return</strong> or even <strong>throw</strong> when it resumes.</p>
+
+            <p class="fragment">So it has to be possible to wire a <strong>runner function</strong> for generators that lets their code look <strong>very much like sync code</strong>.</p>
+
+            <p class="fragment">This was first demonstrated in 2011 by Dave Herman, in <a target="_blank" href="http://taskjs.org/">Task.js</a>.</p>
+
+            <aside class="notes">
+              <p>06:45 -> 06:10</p>
+              <ol>
+                <li>06:45 -> 06:35 Forbes' name for it</li>
+                <li>06:35 -> 06:20 Conversation -> wire a runner</li>
+                <li>06:20 -> 06:10 Task.js</li>
+              </ol>
+            </aside>
+          </section>
+
+          <section id="promises-with-gens-example-user-side">
+            <h2>Sweet examples (user side)</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+var <u>loadStory = runSyncLookingAsync(function*</u>() {
+  <u>try</u> {
+    let story <u>= yield</u> getJSON('story.json');
+    addHtmlToPage(story.heading);
+
+    <u>for</u> (let chapterPromise of story.chapterUrls.map(getJSON)) {
+      let chapter <u>= yield</u> chapterPromise;
+      addHtmlToPage(chapter.html);
+    }
+
+    addTextToPage("All done");
+  } <u>catch</u> (err) {
+    addTextToPage("Argh, broken: " + err.message);
+  }
+  hideSpinner();
+});
+            </code></pre>
+            <pre><code class="javascript" data-trim data-noescape>
+var <u>login = runSyncLookingAsync(function*</u>(username, password, session) {
+  var user = <u>yield</u> getUser(username);
+  var hash = <u>yield</u> crypto.hashAsync(password + user.salt);
+  if (user.hash !== hash) {
+    <u>throw</u> new Error('Incorrect password');
+  }
+  session.setUser(user);
+});
+// …
+login('user', 'secret', session);
+            </code></pre>
+            <aside class="notes">06:10 -> 05:40</aside>
+          </section>
+
+          <section id="promises-with-gens-example-runner-side">
+            <h2>Example runner implementation</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function runSyncLookingAsync(genMakingFx){
+  return function() {
+    var <u>generator</u> = genMakingFx(...arguments);
+
+    function handle(result) {
+      if (result<u>.done</u>) {
+        return <u>Promise.resolve(result.value)</u>;
+      }
+
+      return Promise.resolve(result.value).then(
+        function(res) { return handle(generator<u>.next(res)</u>); },
+        function(err) { return handle(generator<u>.throw(err)</u>); }
+      );
+    }
+
+    try {
+      return <u>handle(generator.next())</u>;
+    } <u>catch</u> (ex) {
+      return <u>Promise.reject(ex)</u>;
+    }
+  }
+}
+            </code></pre>
+            <aside class="notes">05:40 -> 05:00</aside>
+          </section>
+
+          <section id="promises-with-gens-pros-and-cons">
+            <h2>Pro’s and Con’s</h2>
+
+            <h4 class="breathe">Awesome:</h4>
+            <p>Code <strong>is indeed async</strong> (non-blocking).</p>
+            <p class="fragment">Code <strong>looks very much sync</strong> (easier to reason about).</p>
+            <p class="fragment">You can have your cake and eat it too.</p>
+
+            <div class="fragment">
+              <h4>Not so awesome:</h4>
+              <p>A bit hackish.</p>
+            </div>
+            <p class="fragment">Added weight (syntax + performance) due to generators + promises.</p>
+            <p class="fragment">You could argue these building blocks were not <em>designed</em> for this, and are therefore not <em>optimized</em> for this use-case.</p>
+
+            <br>
+            <p class="fragment">Which is why…</p>
+
+            <aside class="notes">
+              <p>05:00 -> 04:30</p>
+              <ol>
+                <li>05:00 -> 04:45 Pro’s</li>
+                <li>04:45 -> 04:30 Con’s</li>
+              </ol>
+            </aside>
+          </section>
+        </section> <!-- #promises-with-generators -->
+
+        <section>
+          <section id="async-await">
+            <h1>async / await</h1>
+            <h3>ZOMG.</h3>
+            <aside class="notes">04:30 -> 03:15</aside>
+          </section>
+
+          <section id="async-await-intro">
+            <h2>Nailed it.</h2>
+
+            <p>Sort of the <strong>Holy Grail</strong> of async JS.</p>
+            <p class="fragment">Basically copy-pasted from <strong>C# 5.0</strong> / .NET 4.5 (2012).</p>
+            <p class="fragment"><em>(Yes, there is much goodness in MS language designs; h/t Anders)</em></p>
+            <aside class="notes">04:30 -> 04:20</aside>
+          </section>
+
+          <section id="async-await-example">
+            <h2>Pretty much find-and-replace</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+<u>async</u> function loadStory() {
+  try {
+    let story = <u>await</u> getJSON('story.json');
+    addHtmlToPage(story.heading);
+
+    for (let chapterPromise of story.chapterUrls.map(getJSON)) {
+      let chapter = <u>await</u> chapterPromise;
+      addHtmlToPage(chapter.html);
+    }
+
+    addTextToPage("All done");
+  } catch (err) {
+    addTextToPage("Argh, broken: " + err.message);
+  }
+  hideSpinner();
+});
+            </code></pre>
+            <pre><code class="javascript" data-trim data-noescape>
+<u>async</u> function login</u>(username, password, session) {
+  var user = <u>await</u> getUser(username);
+  var hash = <u>await</u> crypto.hashAsync(password + user.salt);
+  if (user.hash !== hash) {
+    throw new Error('Incorrect password');
+  }
+  session.setUser(user);
+});
+            </code></pre>
+            <aside class="notes">04:20 -> 03:50</aside>
+          </section>
+
+          <section id="async-await-pros-and-cons">
+            <h2>Pro’s and Con’s</h2>
+
+            <p>Hugs, Kisses and High Fives!</p>
+            <p class="fragment">Like all such new features (e.g. promises and generators), it still requires <strong>optimization for performance</strong> to really get there.  But totally worth it.  And it <strong>will</strong> get there.  Just look at the trend of JS performance in general.</p>
+            <aside class="notes">03:50 -> 03:35</aside>
+          </section>
+
+          <section id="async-await-status">
+            <h2>DO WANT!</h2>
+
+            <p>Currently at <strong>ES Stage 3</strong> (“Candidate”) stage.  <a target="_blank" href="https://tc39.github.io/ecmascript-asyncawait/">Check out the draft</a>.</p>
+            <p>Almost certainly in <strong>ES7/2016</strong>.</p>
+            <p>In the meantime, available behind flags in <strong>Edge</strong> (ha!), and in <strong>Babel</strong>/Traceur, obviously.</p>
+            <aside class="notes">03:35 -> 03:15</aside>
+          </section>
+        </section> <!-- #async-await -->
+
+        <section>
+          <section id="reactive-programming">
+            <h1>Reactive Programming</h1>
+            <h3>Making sense of ongoing events</h3>
+            <aside class="notes">03:15 -> 01:15</aside>
+          </section>
+
+          <section id="frp-intro" class="breathing">
+            <h2>Following the events lately?</h2>
+
+            <p>So far every async op was about getting value(s) <strong>just once</strong>.</p>
+            <p class="fragment">What of <strong>multiple values over time</strong>? What of <strong>streams</strong>, especially <strong>event streams</strong>?</p>
+            <br>
+            <p class="fragment">Promises won’t cut it: they’re <strong>designed</strong> to resolve <strong>only once</strong>.</p>
+            <p class="fragment">This is what <strong>Reactive Programming</strong> is for.</p>
+            <p class="fragment">JS lends itself especially well to Functional Reactive Programming (FRP), which is RP mixed with FP “building blocks” such as <code>map</code>, <code>reduce</code>, <code>filter</code>…</p>
+            <aside class="notes">
+              <p>03:15 -> 02:15</p>
+              <ol>
+                <li>03:15 -> 03:05 was all once</li>
+                <li>03:05 -> 02:50 Streams?</li>
+                <li>02:50 -> 02:45 Not promises…</li>
+                <li>02:45 -> 02:15 RP/FRP</li>
+              </ol>
+            </aside>
+          </section>
+
+          <section id="frp-example">
+            <h2>A powerful RxJS example</h2>
+
+            <pre><code class="javascript" data-trim data-noescape>
+function searchWikipedia(term) {
+  return $<u>.ajaxAsObservable</u>( /* … */ )
+    <u>.select</u>(function(results) { return results.data; }); // Grab the data property
+}
+
+var input = $('#textInput');
+var keyup = input<u>.keyupAsObservable()</u>                    // Event stream!
+  <u>.select</u>(function() { return input.val(); })            // Grab the field value
+  <u>.where</u>(function(text) { return text.length > 2; })     // Only proceed when long enough
+  <u>.throttle</u>(500);                                        // Slow down, breathe…
+
+var searcher = keyup
+  <u>.select</u>(function(text) { return searchWikipedia(text); }) // Map on an XHR *result*!
+  <u>.switchLatest</u>()                                           // Only keep latest response
+  <u>.where</u>(function(data) { return data.length === 2; });     // Only keep useful results
+
+searcher<u>.subscribe</u>(renderResults); // React to final stream by rendering UI
+            </code></pre>
+            <footer>(Credit: <a href="http://jsfiddle.net/mattpodwysocki/THMPk/">Matthew Podwysocki</a>)</footer>
+            <aside class="notes">02:15 -> 01:45</aside>
+          </section>
+
+          <section id="frp-links" class="breathing">
+            <h2>Check these out!</h2>
+
+            <p>Especially amazing when combining multiple event sources due to interdepencies.  Keeps your code really readable / descriptive of intent.</p>
+
+            <p class="fragment"><a target="_blank" href="https://github.com/Reactive-Extensions/RxJS">RxJS</a> is the JS port of the (widely ported) <a target="_blank" href="http://reactivex.io/">Reactive Extensions</a>.</p>
+            <p class="fragment">Also see <a target="_blank" href="https://baconjs.github.io/">BaconJS</a>, a nice alternative.</p>
+            <p class="fragment">Don’t miss Andre Staltz’s <a target="_blank" href="https://gist.github.com/staltz/868e7e9bc2a7b8c1f754">outstanding intro</a> (text + videos).</p>
+
+            <div class="fragment">
+              <h4>An image is worth a thousand words…</h4>
+              <p>
+                Wonderful stuff to grok 50+% of the numerous RP primitives more easily:
+                <a target="_blank" href="http://rxmarbles.com/">RxMarbles</a> (interactive graphics) and
+                <a target="_blank" href="http://jaredforsyth.com/rxvision/">RxVision</a>
+              </p>
+            </div>
+            <aside class="notes">01:45 -> 01:15</aside>
+          </section>
+        </section> <!-- #reactive-programming -->
+
+        <section>
+          <section id="debugging-async">
+            <h3>A word about</h3>
+            <h1>Debugging Async</h1>
+            <aside class="notes">01:15 -> 00:00</aside>
+          </section>
+
+          <section id="debugging-reminders" class="breathing">
+            <h2>Quick reminders</h2>
+
+            <p class="fragment">JS is <strong>an event loop</strong></p>
+            <p class="fragment">JS is <strong>single-threaded</strong></p>
+            <p class="fragment">Async callbacks run on a <strong>basically empty call stack</strong></p>
+            <p class="fragment">Which makes debugging… interesting.</p>
+            <aside class="notes">01:15 -> 01:00</aside>
+          </section>
+
+          <section id="debugging-async-devtools">
+            <h2>Async call stacks in DevTools</h2>
+
+            <p>Chrome got <strong>async call stacks</strong> around version 35 (mid-2014).</p>
+            <p>“Traverses” async handovers: timers, XHR, promises, rAF, most observers, postMessage, FileSystem, IndexedDB…</p>
+            <p><img src="images/async-call-stack.png" alt="An example async call stack"></p>
+            <p><a href="http://www.html5rocks.com/en/tutorials/developertools/async-call-stack/" target="_blank">Check out this comprehensive article</a></p>
+            <aside class="notes">01:00 -> 00:15</aside>
+          </section>
+
+          <section id="debugging-v8-async-stack-traces">
+            <h2>Node async stack traces</h2>
+
+            <p>When in Node, you can enable (in development, preferrably: performance penalty…) so-called <strong>long stack traces</strong> through specific modules.  npm has a few, the most popular apparently being <a target="_blank" href="https://github.com/mattinsler/longjohn">longjohn</a>.</p>
+            <aside class="notes">00:15 -> 00:00</aside>
+          </section>
+        </section> <!-- #debugging-async -->
+
+				<section>
+					<h1>Thank you!</h1>
+          <h3>And may JS be with you</h3>
+          <br>
+					<p>Christophe Porteneuve</p>
+          <p><a href="https://twitter.com/porteneuve">@porteneuve</a></p>
+
+          <p class="breathing">
+            Get the slides on <a href="http://bit.ly/dotjs-async">bit.ly/dotjs-async</a><br/>
+          </p>
+				</section>
+			</div>
+			<div class="footer"><p>#DevoxxFR</p></div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: false,
+
+				width: 1280,
+				height: 720,
+				slideNumber: true,
+				margin: 0.0,
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
