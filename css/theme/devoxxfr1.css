@@ -66,6 +66,10 @@ body {
 .reveal h1 {
   text-shadow: none; }
 
+#prioFix .reveal .slides h1 + h2 {
+  padding-top: 0;
+}
+
 /*********************************************
  * OTHER
  *********************************************/
