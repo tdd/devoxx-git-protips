@@ -186,9 +186,8 @@ git config --global color.diff always
 git config --global color.diff.meta yellow bold
 git config --global color.diff.frag magenta bold
 git config --global color.diff.whitespace red reverse
-LESS_CONFIG="--tabs=2 -RFX --pattern='^(added|deleted|modified): '"
-git config --global pager.diff "diff-so-fancy | less $LESS_CONFIG"
-git config --global pager.show "diff-so-fancy | less $LESS_CONFIG"
+git config --global pager.diff "diff-so-fancy | less --tabs=2 -RFX"
+git config --global pager.show "diff-so-fancy | less --tabs=2 -RFX"
             </code></pre>
           </section>
 
@@ -242,7 +241,7 @@ git add -p <samp>path…</samp>
             <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
 git config --global alias.ci commit
 git ci -m "<samp>message</samp>"
-git show [<samp>ref</samp>]
+git show [--stat|--dirstat|-w] [<samp>ref</samp>]
             </code></pre>
           </section>
 
@@ -252,6 +251,8 @@ git show [<samp>ref</samp>]
             <p>L’inattention, tout ça…</p>
 
             <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git rm --cached <samp>path</samp>
+git reset HEAD~1 <samp>path</samp>
 git ci --amend [-m|--no-edit]
 git config --global alias.oops 'commit --amend --no-edit'
             </code></pre>
