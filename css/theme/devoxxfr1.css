@@ -3,9 +3,10 @@
  *
  * Copyright (C) 2015 Hakim El Hattab, http://hakim.se
  */
- @import url(../../lib/font/source-sans-pro/source-sans-pro.css);
- @import url(../fonts/Montserrat/montserrat.css);
- @import url(../fonts/OpenSans/open-sans.css);
+@import url(../fonts/Montserrat/montserrat.css);
+@import url(../fonts/OpenSans/open-sans.css);
+@import url(../fonts/SourceCodePro/source-code-pro.css);
+
 section.has-light-background, section.has-light-background h1, section.has-light-background h2, section.has-light-background h3, section.has-light-background h4, section.has-light-background h5, section.has-light-background h6 {
   color: #222; }
 
@@ -147,7 +148,7 @@ body {
 .reveal pre {
   display: block;
   position: relative;
-  width: 90%;
+  /*width: 90%;*/
   margin: 20px auto;
   text-align: left;
   font-size: 0.55em;
@@ -215,14 +216,14 @@ body {
  * LINKS
  *********************************************/
 .reveal a {
-  color: #42affa;
+  color: #b10142;
   text-decoration: none;
   -webkit-transition: color 0.15s ease;
   -moz-transition: color 0.15s ease;
   transition: color 0.15s ease; }
 
 .reveal a:hover {
-  color: #8dcffc;
+  color: #EA0058;
   text-shadow: none;
   border: none; }
 
@@ -258,31 +259,31 @@ body {
  *********************************************/
 .reveal .controls .navigate-left,
 .reveal .controls .navigate-left.enabled {
-  border-right-color: #42affa; }
+  border-right-color: #b10142; }
 
 .reveal .controls .navigate-right,
 .reveal .controls .navigate-right.enabled {
-  border-left-color: #42affa; }
+  border-left-color: #b10142; }
 
 .reveal .controls .navigate-up,
 .reveal .controls .navigate-up.enabled {
-  border-bottom-color: #42affa; }
+  border-bottom-color: #b10142; }
 
 .reveal .controls .navigate-down,
 .reveal .controls .navigate-down.enabled {
-  border-top-color: #42affa; }
+  border-top-color: #b10142; }
 
 .reveal .controls .navigate-left.enabled:hover {
-  border-right-color: #8dcffc; }
+  border-right-color: #76002C; }
 
 .reveal .controls .navigate-right.enabled:hover {
-  border-left-color: #8dcffc; }
+  border-left-color: #76002C; }
 
 .reveal .controls .navigate-up.enabled:hover {
-  border-bottom-color: #8dcffc; }
+  border-bottom-color: #76002C; }
 
 .reveal .controls .navigate-down.enabled:hover {
-  border-top-color: #8dcffc; }
+  border-top-color: #76002C; }
 
 /*********************************************
  * PROGRESS BAR
