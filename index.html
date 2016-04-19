@@ -68,7 +68,7 @@ const christophe = {
   city:       'Paris, FR',
   company:    'Delicious Insights',
   trainings:  ['Git Total', 'JS Total', 'Node.js'],
-  gitSince:   2008,
+  gitSince:   '2008-03-28',
   claimsToFame: [
     'Git Attitude',
     'Learning GitHub (O’Reilly)',
@@ -79,26 +79,479 @@ const christophe = {
         </section>
 
         <section>
-          <section id="fixme-chapter">
-            <h1>Chapter Section</h1>
+          <section id="start">
+            <h1>Avant de commencer…</h1>
           </section>
 
-          <section id="fixme-slide">
-            <h2>Slide</h2>
+          <section id="survey" data-time="5">
+            <h2>Petit sondage</h2>
 
-            <pre class="command-line" data-prompt="$" data-output="2-10"><code class="language-bash" data-trim data-noescape>
-git youpi-la-frite
-Yes, youpi la frite!
+            <p>Qui parmi vous… (main levée)</p>
+            <p class="fragment">…n’a jamais fait de Git ?</p>
+            <p class="fragment">…en ligne de commande ?</p>
+            <p class="fragment">…ne fait pas de Git au boulot / en prod ?</p>
+            <p class="fragment">…n’a pas Git installé sur sa machine ici ?</p>
+            <p class="fragment">…n’a jamais fait de rebase ?</p>
+          </section>
+
+          <section id="installing" data-time="10">
+            <h2>Installer Git</h2>
+
+            <p><strong><a href="http://installations.delicious-insights.com/software/git.html">Le guide FR qui va bien</a></strong></p>
+            <p>Assurez-vous d’avoir une 2.0 minimum…</p>
+            <p class="fragment">…ou en tout cas, vraiment, rien en-dessous de 1.8.5 !</p>
+
+            <p class="fragment">La configuration de Git : globale vs. locale</p>
+            <p class="fragment">Globale : <tt>~/.gitconfig</tt>, ou <tt>~/.config/git/config</tt></p>
+            <p class="fragment">Locale : <tt>~/.git/config</tt></p>
+
+            <pre class="fragment command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git config [--global] [--replace-all|--unset-all] name [value]
+git config [--global] --list
+            </code></pre>
+
+            <p class="fragment">Ah, et juste un mot sur les GUI…</p>
+          </section>
+
+          <section id="goals" data-time="5">
+            <h2>Objectifs &amp; Philosophie</h2>
+
+            <ul>
+              <li>
+                <strong>Maintenabilité</strong>
+                <ul>
+                  <li class="fragment">Graphe lisible + pertinent</li>
+                  <li class="fragment">Commits atomiques, homogènes, compréhensibles, peu défectueux</li>
+                  <li class="fragment">Workflow propre</li>
+                </ul>
+              </li>
+              <li class="fragment current-visible"><strong>Tolérance à l’erreur</strong></li>
+              <li class="fragment overlay-previous"><strong>Tolérance à l’humain 😉</strong></li>
+            </ul>
+          </section>
+        </section> <!-- #start -->
+
+        <section>
+          <section id="good-commit-authoring" data-stamp="09:50">
+            <h1><span class="secondary">1.</span> Bien pondre un commit</h1>
+          </section>
+
+          <section id="better-status">
+            <h2>Un meilleur statut</h2>
+
+            <p>Votre meilleur ami.  Affiche plein de trucs utiles.</p>
+            <p>Réflexe absolu <strong>avant un commit</strong>, suite à un <strong>conflit</strong>…</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git config --global alias.st status
+git config --global status.showUntrackedFiles all
+git config --global color.ui auto
+git st
             </code></pre>
           </section>
-        </section> <!-- #fixme-chapter -->
+
+          <section id="better-diff">
+            <h2>Un meilleur diff</h2>
+
+            <p>L’outil fondamental, mais grave sous-utilisé.</p>
+            <p>Intégré à de nombreux autres, options réutilisables (<tt>log</tt>, <tt>show</tt>…)</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git diff
+git config --global diff.mnemonixPrefix true
+git config --global diff.renames true
+git diff -w
+git diff --word-diff
+git config --global diff.wordRegex .
+git diff --staged
+git add -N <samp>path</samp>
+git show :0:<samp>path</samp>
+git diff --stat
+git diff --dirstat[=<samp>n</samp>]
+            </code></pre>
+          </section>
+
+          <section id="custom-diff">
+            <h2>Un diff personnalisé</h2>
+
+            <p>Allez, on y va on se lâche.</p>
+            <p>Z’avez remarqué comme c’est pas pratique pour le copier-coller ?  Comme on voit mal les limites de fichier ?</p>
+            <p lang="en">Custom diffing to the rescue!</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+npm install -g diff-so-fancy
+# ou, sur OSX avec Homebrew mais sans npm : brew update + brew install diff-so-fancy
+
+git config --global color.diff always
+git config --global color.diff.meta yellow bold
+git config --global color.diff.frag magenta bold
+git config --global color.diff.whitespace red reverse
+LESS_CONFIG="--tabs=2 -RFX --pattern='^(added|deleted|modified): '"
+git config --global pager.diff "diff-so-fancy | less $LESS_CONFIG"
+git config --global pager.show "diff-so-fancy | less $LESS_CONFIG"
+            </code></pre>
+          </section>
+
+          <section id="proper-ignores">
+            <h2>T’es comme le H de Hawaii…</h2>
+
+            <p>Y’a <strong>tellement</strong> de motifs à ignorer sur un projet…</p>
+            <p>Rien qu’avec Visual Studio, JetBrains ou Rails, ça envoie du lourd…</p>
+            <p><a href="http://gitignore.io">Gitignore.io</a> est juste trop cool.</p>
+            <p>…et on cale son <tt>.gitignore</tt> avec (idéalement dès le 1er commit)</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+# …
+git add .gitignore
+git commit -m 'Initial commit'
+            </code></pre>
+
+            <pre class="command-line" data-prompt="$" data-output="2-4"><code class="language-bash" data-trim data-noescape>
+git add rules.log
+The following paths are ignored by one of your .gitignore files:
+rules.log
+Use -f if you really want to add them.
+git add -f rules.log
+            </code></pre>
+          </section>
+
+          <section id="unstaging-and-partial-staging">
+            <h2>On me voit, on me voit pas, on me voit un peu.</h2>
+
+            <p>Rappel critique : <strong>le <span lang="en">stage</span></strong> / l’index.</p>
+            <p>On <span lang="en">unstage</span> avec un <tt>reset</tt> :</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git reset <samp>path…</samp>
+            </code></pre>
+
+            <p>Le cas <strong>hyper fréquent</strong> du <strong><span lang="en">staging</span> partiel</strong> de fichier :</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git add -p <samp>path…</samp>
+            </code></pre>
+          </section>
+
+          <section id="its-commit-time">
+            <h2>C’est (enfin) l’heure du commit !</h2>
+
+            <p>Mais en vrai, soyons clairs :</p>
+
+            <blockquote>Commit Often, Push Sparingly</blockquote>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git config --global alias.ci commit
+git ci -m "<samp>message</samp>"
+git show [<samp>ref</samp>]
+            </code></pre>
+          </section>
+
+          <section id="fix-a-commit">
+            <h2>Ah bah oui mais non.</h2>
+
+            <p>L’inattention, tout ça…</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git ci --amend [-m|--no-edit]
+git config --global alias.oops 'commit --amend --no-edit'
+            </code></pre>
+          </section>
+        </section> <!-- #good-commit-authoring -->
+
+        <section>
+          <section id="better-logging" data-stamp="10:50">
+            <h1><span class="secondary">2.</span> Un meilleur log</h1>
+          </section>
+
+          <section id="what-lines-to-log">
+            <h2>Loguer quelles parties du graphe ?</h2>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+LOG_FORMAT='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%an %ad)%Creset'
+git config --global alias.lg "log --graph --date=relative --pretty=tformat:'$LOG_FORMAT'"
+git config --global log.abbrevCommit true
+git config --global log.follow true
+            </code></pre>
+
+            <p>Le log <strong>remonte le temps</strong> à partir d’un ou plusieurs points.</p>
+            <p>Le plus récent d’abord (chronologique inverse).</p>
+
+            <pre class="command-line" data-prompt="$" data-output="2" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git lg [<samp>ref…</samp>] [^<samp>neg-ref…</samp>]
+git lg <samp>ref</samp>..
+git lg [--branches[=<samp>glob</samp>]|--tags[=<samp>glob</samp>]|--all] [--exclude=<samp>glob</samp>]
+git lg [--right-only|--left-only] <samp>ref1</samp>...<samp>ref2</samp>
+git lg -<samp>n</samp>
+            </code></pre>
+          </section>
+
+          <section id="log-meta-filtering">
+            <h2>Filtrages du log basés métadonnées</h2>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git lg --grep="<samp>message regex</samp>" [--invert-grep] [--all-match] [-i]
+git lg --author="<samp>author regex</samp>" [-i]
+git config --global grep.extendedRegexp true
+git lg --[no-]merges
+            </code></pre>
+          </section>
+
+          <section id="log-content-filtering">
+            <h2>Filtrages du log basés contenu</h2>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git lg … [--] <samp>path…</samp>
+git lg -S "<samp>texte en diff actif</samp>" [--pickaxe-regex]   # Mode pickaxe
+git lg -G "<samp>regex en diff actif</samp>"
+git lg -L ':<samp>regex</samp>:<samp>path</samp>'
+git lg -L '<samp>startline</samp>,<samp>endline</samp>:<samp>path</samp>'
+git lg --diff-filter=<samp>pattern</samp>                        # Combo de A, C, D, M, R, T…
+            </code></pre>
+          </section>
+
+          <section id="log-has-diffs">
+            <h2>Le diff est intégré</h2>
+
+            <p>…et toutes ses options habituelles sont dispo.</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git lg -p [-w] [--word-diff]…       # Diff classique
+git lg [--stat|--dirstat|--numstat] # etc.
+            </code></pre>
+          </section>
+        </section> <!-- #better-logging -->
+
+        <section>
+          <section id="cleanup-a-branch" data-stamp="11:20">
+            <h1><span class="secondary">3.</span> Nettoyer une branche</h1>
+          </section>
+
+          <section id="interactive-rebase-intro">
+            <h2>Rebase interactif : le principe</h2>
+
+            <p>Qu’est-ce qu’un <span lang="en">rebase</span> ?</p>
+            <p>À quoi sert le rebase interactif ?</p>
+            <p>Aparté : quels autres types de rebase ?</p>
+          </section>
+
+          <section id="interactive-rebase-launch-and-verbs">
+            <h2>Lancer un rebase interactif</h2>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git rebase -i [<samp>latest-ok=</samp>@{u}]
+git rebase -i --root
+            </code></pre>
+
+            <p>Quelles actions possibles ?</p>
+
+            <table class="compact">
+              <thead>
+                <tr>
+                  <th>Verbe</th>
+                  <th>Intention</th>
+                  <th>Verbe</th>
+                  <th>Intention</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><tt>pick</tt></td>
+                  <td>commit tel quel (<span lang="en">cherry pick</span>)</td>
+                  <td><tt>reword</tt></td>
+                  <td>ajustement message</td>
+                </tr>
+                <tr>
+                  <td><tt>squash</tt></td>
+                  <td>fusion code/message avec le commit précédent</td>
+                  <td><tt>fixup</tt></td>
+                  <td>fusion du code seul avec le commit précédent</td>
+                </tr>
+                <tr>
+                  <td><tt>drop</tt>*</td>
+                  <td>commit ignoré</td>
+                  <td><tt>edit</tt></td>
+                  <td>ajustement manuel</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>Réordonner les lignes réordonne les commits.  Et comme toujours, script vide (hors commentaires) = abandon de commande.</p>
+          </section>
+
+          <section id="interactive-rebase-process">
+            <h2>En cours de rebase interactif</h2>
+
+            <p>Git nous donne la main lors d’un conflit :</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp" data-output="2,4,6"><code class="language-bash" data-trim data-noescape>
+git st
+# résolution fichier par fichier, avec à chaque fois :
+git add <samp>path</samp>
+# et au final :
+git rebase --continue
+# ou si ça donne un arbitrage vide par rapport à la cible :
+git rebase --skip
+            </code></pre>
+
+            <p>Git nous donne aussi la main sur un <tt>edit</tt>.  On fait ce qu’on veut, et au final, pareil que pour un conflit.</p>
+
+            <p>Si on s’empêtre et qu’on veut juste lâcher l’affaire :</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp" data-output="2,4,6"><code class="language-bash" data-trim data-noescape>
+git rebase --abort
+            </code></pre>
+          </section>
+
+          <section id="interactive-rebase-practice">
+            <h2>Attentifs, ensemble</h2>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+curl -O http://tdd.github.io/devoxx-git-protips/playground.zip
+unzip -q playground.zip
+cd devoxx-git-protips-playground
+git lg --all
+            </code></pre>
+
+            <p>On va se faire la plupart des besoins :</p>
+
+            <ul>
+              <li>Réordonnancement</li>
+              <li>Suppression</li>
+              <li>Fusion</li>
+              <li>Changement de message</li>
+              <li>Découpage (boss de fin de niveau !)</li>
+            </ul>
+
+          </section>
+
+          <section id="interactive-rebase-planning-ahead">
+            <h2>Anticiper le rebase à venir</h2>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git commit --fixup=<samp>ref</samp>
+git commit --squash=<samp>ref</samp>
+git rebase -i --autosquash
+            </code></pre>
+          </section>
+        </section> <!-- #cleanup-a-branch -->
+
+        <section>
+          <section id="push-pull-traps" data-stamp="11:50">
+            <h1><span class="secondary">4.</span> Les pièges de <tt>push</tt> &amp; <tt>pull</tt></h1>
+          </section>
+
+          <section id="push-traps">
+            <h2>Côté <tt>push</tt></h2>
+
+            <p>Quels pièges ?</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git config --global push.default upstream
+git config --global push.followTags true
+git push -u <samp>remote</samp> <samp>ref…</samp>
+git branch set-upstream-to=<samp>remote/ref</samp> [<samp>branch</samp>]
+            </code></pre>
+          </section>
+
+          <section id="pull-traps">
+            <h2>Côté <tt>pull</tt></h2>
+
+            <p><tt>fetch</tt> vs. <tt>pull</tt></p>
+
+            <p>Quels pièges ?</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp"><code class="language-bash" data-trim data-noescape>
+git config --global pull.rebase preserve
+git config --global fetch.prune false
+git remote prune <samp>remote</samp>
+            </code></pre>
+
+            <p>Workflows et impact sur la dynamique de synchro.</p>
+            <p>« Sync » ?</p>
+          </section>
+        </section> <!-- #push-pull-traps -->
+
+        <section>
+          <section id="arbiter-a-conflict" data-stamp="12:10">
+            <h1><span class="secondary">5.</span> Arbitrer un conflit</h1>
+          </section>
+
+          <section id="conflict-methodology">
+            <h2>Ça ne fait pas mal</h2>
+
+            <p>Il suffit de suivre la méthodologie qui va bien.</p>
+            <p>Elle est dans <tt>git help merge</tt>, je voudrais pas dire, hein…</p>
+
+            <p>En amont :</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git config --global core.whitespace '-trailing'
+git config --global merge.conflictStyle diff3
+git config --global merge.log true # ou un nombre de commits, par défaut 25
+git config --global merge.ff false
+            </code></pre>
+
+            <p>Puis dans les grandes lignes, ça donne :</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp,em"><code class="language-bash" data-trim data-noescape>
+git st                        # Quel est l’étendue des dommages ?
+git mergetool <samp>path</samp>            # Si on a+veut un, pour le fichier concerné
+git add <samp>path</samp>                  # Fichier par fichier, après l’avoir arbitré
+git commit [--no-edit]        # Une fois que tout est <em>staged</em>
+            </code></pre>
+          </section>
+
+          <section id="conflict-file-handling">
+            <h2>Arbitrer un fichier précis</h2>
+
+            <p>Un conflit, ça se traite fichier par fichier.</p>
+
+            <pre class="command-line" data-prompt="$" data-keep-tags="samp" data-output="1,3,5,7,9,11"><code class="language-bash" data-trim data-noescape>
+# Qui est le prochain coupable ?
+git st
+# On édite le fichier en direct, ou si on a un bon outil dédié configuré…
+git mergetool <samp>path</samp>
+# Une fois que les conflits sont réglés, on le dit :
+git add <samp>path</samp>
+# Si on a mal arbitré (notammment mergetool) ou que le style de marqueurs nous gêne :
+git checkout --conflict=(merge|diff3) <samp>path</samp>
+# Besoin de voir un des 3 snapshots sans mergetool ?
+git show (<samp>ref</samp>|MERGE_HEAD|HEAD|:1):<samp>path</samp>
+# Envie de récupérer le fichier tel quel depuis une des branches, ou ailleurs ?
+git checkout <samp>ref</samp> [--] <samp>path</samp>
+            </code></pre>
+          </section>
+
+          <section id="rerere">
+            <h2>rerere</h2>
+
+            <p><strong>RE</strong>use <strong>RE</strong>corded <strong>RE</strong>solution.  OoOoOOOoh, ça vend du rêve.</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git config --global rerere.enabled true
+git config --global rerere.autoupdate true # seulement pour les gens attentifs !
+git rerere remaining
+            </code></pre>
+
+            <p>En cas de besoin…</p>
+
+            <pre class="command-line" data-prompt="$"><code class="language-bash" data-trim data-noescape>
+git rerere forget <samp>path</samp>
+git rerere clear
+            </code></pre>
+
+            <p>Note de workflow : ça coupe bien l’herbe sous le pied au principal argument du <q>« rebase tout le temps sur le dernier <tt>master</tt> »</q>…  Parlons donc des <strong>merges de contrôle</strong>.</p>
+          </section>
+        </section> <!-- #arbiter-a-conflict -->
 
         <section>
           <h1>Merci !</h1>
-          <h3>Et que Git soit avec vous</h3>
+          <h2>Et que Git soit avec vous</h2>
           <br>
           <p>Christophe Porteneuve</p>
           <p><a href="https://twitter.com/porteneuve">@porteneuve</a></p>
+          <p><a href="http://www.git-attitude.fr/archives/">Les articles de fond qui vont bien</a></p>
+          <p><a href="http://www.git-attitude.fr/git-total/">La formation qui tue tout</a></p>
 
           <p class="breathing">
             Les slides sont sur <a href="http://bit.ly/devoxx-git">bit.ly/devoxx-git</a><br/>
